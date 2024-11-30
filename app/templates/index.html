@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Interface</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <label for="html-page">HTML 페이지</label>
+            <input type="text" id="html-page" value="comments.html">
+            
+            <label for="email-type">이메일 종류</label>
+            <input type="text" id="email-type" value="지메일, 네이버, 핫메일, 야후">
+
+            <label for="limit">뽑기 수</label>
+            <input type="text" id="limit" value="3">
+
+            <label for="grace-period">종료일자 grace period</label>
+            <input type="text" id="grace-period" value="1">
+
+            <label for="end-date">종료일자 (mm/dd)</label>
+            <input type="text" id="end-date" placeholder="예시:01/01">
+
+            <button id="save-settings">설정 저장</button>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>시간</th>
+                    <th>댓글</th>
+                    <th>이메일 종류</th>
+                </tr>
+            </thead>
+            <tbody id="data-table-body">
+                <!-- Dynamic rows go here -->
+            </tbody>
+        </table>
+
+        <div class="result">
+            <label for="result">결과:</label>
+            <div id="result"></div>
+        </div>
+
+        <div class="actions">
+            <button id="save-comments">현재 단계 저장</button>
+            <button id="run-all-in-one">자동 실행</button>
+            <button id="get-comments">1. 댓글 가져오기</button>
+            <button id="overdue-comments">2. 기간 초과 제거</button>
+            <button id="find-email">3. 이메일 추출</button>
+            <button id="find-duplicate-comments">4. 중복 응답 제거</button>
+            <button id="random-picker">5. 추천</button>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#save-settings').click(function() {
+                const data = {
+                    html_name: $('#html-page').val(),
+                    email_types: $('#email-type').val(),
+                    pick_number: $('#limit').val(),
+                    grace_period: $('#grace-period').val()
+                };
+                $.ajax({
+                    url: '/save_settings',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        alert(response.message);
+                    }
+                });
+            });
+
+            $('#get-comments').click(function() {
+            $.ajax({
+                url: '/get_comments',
+                type: 'GET',
+                success: function(comments) {
+                    displayTable(comments);
+                },
+                error: function(xhr) {
+                    if (xhr.status === 404) {
+                        alert(xhr.responseJSON.error);
+                    }
+                }
+            });
+        });
+
+            $('#overdue-comments').click(function() {
+                const data = {
+                    end_date: $('#end-date').val()
+                };
+                $.ajax({
+                    url: '/overdue_comments',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        displayTable(response.comments_remove_overdue);
+                        $('#result').text(`종료일자 이전 댓글: ${response.cnt_not_overdue}개, 종료일자 이후 댓글: ${response.cnt_overdue}개`);
+                    }
+                });
+            });
+
+            $('#find-email').click(function() {
+                const data = {
+                    comments_remove_overdue: getTableData()
+                };
+                $.ajax({
+                    url: '/find_email',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        displayTable(response.comments_emails);
+                        $('#result').text(`이메일 주소를 포함한 댓글: ${response.cnt_email}개`);
+                    }
+                });
+            });
+
+            $('#find-duplicate-comments').click(function() {
+                const data = {
+                    comments_emails: getTableData()
+                };
+                $.ajax({
+                    url: '/find_duplicate_comments',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        displayTable(response.comments_remove_duplicate);
+                        $('#result').text(`중복된 이메일: ${response.cnt_duplicate}개, 중복되지 않은 이메일: ${response.cnt_not_duplicate}개`);
+                    }
+                });
+            });
+
+            $('#random-picker').click(function() {
+                const data = {
+                    comments_remove_duplicate: getTableData(),
+                    pick_number: $('#limit').val()
+                };
+                $.ajax({
+                    url: '/random_picker',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(random_emails) {
+                        displayTable(random_emails);
+                    }
+                });
+            });
+
+            function displayTable(data) {
+                const tbody = $('#data-table-body');
+                tbody.empty();
+                data.forEach(row => {
+                    const tr = $('<tr>');
+                    row.forEach(cell => {
+                        tr.append($('<td>').text(cell));
+                    });
+                    tbody.append(tr);
+                });
+            }
+
+            function getTableData() {
+                const data = [];
+                $('#data-table-body tr').each(function() {
+                    const row = [];
+                    $(this).find('td').each(function() {
+                        row.push($(this).text());
+                    });
+                    data.push(row);
+                });
+                return data;
+            }
+        });
+    </script>
+</body>
+</html>
