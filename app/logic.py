@@ -95,7 +95,7 @@ class CommentAnalyzer:
         for i in range(len(comments)):
             result.append([times[i], comments[i], emails[i]])
 
-        return result
+        return result, len(comments)
 
     # 웹에서는 사용하지 않음
     # 자바스크립트로 처리
@@ -225,7 +225,7 @@ class CommentAnalyzer:
         Run all the methods in order
         """
         try:
-            comments = self.get_comments()
+            comments, _ = self.get_comments()
             comments_remove_overdue, _, _, _ = self.overdue_comments(comments, end_date)
             comments_emails, _ = self.find_email(comments_remove_overdue)
             (

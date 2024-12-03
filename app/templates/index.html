@@ -165,8 +165,9 @@
             $.ajax({
                 url: '/get_comments',
                 type: 'GET',
-                success: function(comments) {
-                    displayTable(comments);
+                success: function(response) {
+                    displayTable(response.comments);
+                    $('#result').text(`총 댓글 수: ${response.cnt}개`);
                 },
                 error: function(xhr) {
                     if (xhr.status === 404) {

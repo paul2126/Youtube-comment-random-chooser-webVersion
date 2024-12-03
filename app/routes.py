@@ -43,8 +43,8 @@ def save_settings():
 @main.route('/get_comments', methods=['GET'])
 def get_comments():
     try:
-        comments = analyzer.get_comments()
-        return jsonify(comments)
+        comments, cnt = analyzer.get_comments()
+        return jsonify({"comments": comments, "cnt": cnt})
     except FileNotFoundError as e:
         return jsonify({"error": str(e)}), 404
 
@@ -52,7 +52,7 @@ def get_comments():
 def overdue_comments():
     try:
         data = request.json
-        comments = analyzer.get_comments()
+        comments, _ = analyzer.get_comments()
         end_date = data['end_date']
         comments_remove_overdue, comments_overdue, cnt_overdue, cnt_not_overdue = analyzer.overdue_comments(comments, end_date)
         return jsonify({
