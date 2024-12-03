@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 # import tkinter as tk
 # from tkinter import ttk, scrolledtext, messagebox
 import random
+from .exception import SuccessException
 
 
 class CommentAnalyzer:
@@ -271,12 +272,4 @@ class CommentAnalyzer:
         self._get_settings()  # Update settings
         raise SuccessException("정상적으로 저장되었습니다.")
 
-
-class SuccessException(Exception):
-    """
-    Custion exception to indicate success
-    """
-    def __init__(self, message="성공"):
-        self.message = message
-        super().__init__(self.message)
 

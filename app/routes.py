@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 import os
 from .logic import CommentAnalyzer
+from .exception import SuccessException
 
 main = Blueprint('main', __name__)
 analyzer = CommentAnalyzer()
@@ -23,6 +24,8 @@ def save_settings():
         return jsonify({"message": "Settings saved successfully"})
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+    except SuccessException as e:
+        return jsonify({"message": str(e)}), 200
 
 @main.route('/get_comments', methods=['GET'])
 def get_comments():
