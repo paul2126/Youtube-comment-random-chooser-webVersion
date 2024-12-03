@@ -75,12 +75,15 @@ def find_duplicate_comments():
 
 @main.route('/random_picker', methods=['POST'])
 def random_picker():
-    data = request.json
-    comments_remove_duplicate = data['comments_remove_duplicate']
-    pick_number = data['pick_number']
-    random_emails = analyzer.random_picker(comments_remove_duplicate, pick_number)
-    return jsonify(random_emails)
-
+    try:
+        data = request.json
+        comments_remove_duplicate = data['comments_remove_duplicate']
+        pick_number = data['pick_number']
+        random_emails = analyzer.random_picker(comments_remove_duplicate, pick_number)
+        return jsonify(random_emails)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    
 @main.route('/upload_file', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:

@@ -1,5 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+<style>
+    .spaced-div {
+        margin-bottom: 20px;
+    }
+</style>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +14,7 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
+        <div class="header spaced-div">
             <label for="html-page">HTML 페이지</label>
             <input type="text" id="html-page" value="comments.html">
             
@@ -28,7 +33,7 @@
             <button id="save-settings">설정 저장</button>
         </div>
 
-        <div class="actions">
+        <div class="actions spaced-div">
             <button id="save-comments">현재 단계 저장</button>
             <button id="run-all-in-one">자동 실행</button>
             <button id="get-comments">1. 댓글 가져오기</button>
@@ -40,11 +45,11 @@
             <button id="upload-button">파일 업로드</button>
         </div>
 
-        <div class="result">
-            <label for="result">결과:</label>
+        <div class="result spaced-div">
+            <label for="result"><b>결과:</b></label>
             <div id="result"></div>
         </div>
-        
+
         <table class="data-table">
             <thead>
                 <tr>
@@ -166,6 +171,11 @@
                     data: JSON.stringify(data),
                     success: function(random_emails) {
                         displayTable(random_emails);
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 400) {
+                            alert(xhr.responseJSON.error);
+                        }
                     }
                 });
             });

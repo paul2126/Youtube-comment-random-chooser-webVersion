@@ -200,6 +200,8 @@ class CommentAnalyzer:
         :param emails: emails[time, comment, email type], pick_number
         :return: random_emails[picked emails]
         """
+        if not emails: # If there is no comment
+            raise ValueError("추첨할 이메일이 없습니다")
         random_emails = random.sample(emails, pick_number)
         for email in random_emails:
             print(f"{email[0]}@{email[1]}")
