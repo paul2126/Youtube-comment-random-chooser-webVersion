@@ -1,4 +1,6 @@
-from flask import Blueprint, render_template, request, jsonify
+from datetime import datetime
+import json
+from flask import Blueprint, render_template, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 import os
 from .logic import CommentAnalyzer
@@ -11,6 +13,17 @@ analyzer = CommentAnalyzer()
 def index():
     return render_template('index.html')
 
+@main.route('/get_settings', methods=['GET'])
+def get_settings():
+    try:
+        with open('settings.json', 'r', encoding='utf-8') as file:
+            settings = json.load(file)
+        return jsonify(settings)
+    except FileNotFoundError:
+        return jsonify({"error": "Settings file not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 @main.route('/save_settings', methods=['POST'])
 def save_settings():
     try:
@@ -97,10 +110,28 @@ def upload_file():
     if file and file.filename.endswith('.html'):
         filename = "comments.html" # change filename to comments.html
         file.save(os.path.join('uploads', filename))
-        analyzer.html_name = os.path.join('uploads', filename)
+        analyzer.html_name = filename
         return jsonify({"message": "File uploaded successfully"})
     else:
         return jsonify({"error": "Invalid file type"}), 400
 
+@main.route('/save_comments', methods=['POST'])
+def save_comments():
+    try:
+        data = request.json
+        comments = data['comments']
+        filename = "comments"
+        filepath = analyzer.save_data(comments, filename)
+        return jsonify({"message": "Comments saved successfully", "filepath": filepath})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@main.route('/download_file/<path:filename>', methods=['GET'])
+def download_file(filename):
+    try:
+        return send_from_directory('data', filename, as_attachment=True)
+    except FileNotFoundError:
+        return jsonify({"error": "File not found"}), 404
+    
 if __name__ == '__main__':
     main.run(debug=True)

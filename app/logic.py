@@ -63,10 +63,10 @@ class CommentAnalyzer:
         :return: comments[time, comment, email type]
         """
         try:
-            with open(f"uploads/{self.html_name}", "r", encoding="utf-8") as file:
+            with open(f"./uploads/{self.html_name}", "r", encoding="utf-8") as file:
                 html_content = file.read()
         except UnicodeDecodeError:
-            with open(f"uploads/{self.html_name}", "r", encoding="cp949") as file:
+            with open(f"./uploads/{self.html_name}", "r", encoding="cp949") as file:
                 html_content = file.read()
         except FileNotFoundError:
             raise FileNotFoundError(f"{self.html_name}을 찾을 수 없습니다.\n실행파일과 같은 폴더에 저장했는지 확인 부탁드립니다.")
@@ -97,6 +97,8 @@ class CommentAnalyzer:
 
         return result
 
+    # 웹에서는 사용하지 않음
+    # 자바스크립트로 처리
     def save_data(self, datas, filename):
         """
         Save data to a text file
@@ -111,7 +113,10 @@ class CommentAnalyzer:
             ) as file:
                 for data in datas:
                     file.write(", ".join(data) + "\n")
-                raise SuccessException(f"{directory}에 {current_date}_{filename}.txt를 성공적으로 저장했습니다.")
+                # raise SuccessException(f"{directory}에 {current_date}_{filename}.txt를 성공적으로 저장했습니다.")
+                return f"./{directory}/{current_date}_{filename}.txt" # 파일 경로 반환
+        except SuccessException as e:
+            raise e
         except Exception as e:
             raise Exception(f"파일 저장 중 오류가 발생했습니다: {str(e)}")
 
@@ -203,7 +208,7 @@ class CommentAnalyzer:
         """
         if not emails: # If there is no comment
             raise ValueError("추첨할 이메일이 없습니다")
-        random_emails = random.sample(emails, pick_number)
+        random_emails = random.sample(emails, int(pick_number))
         for email in random_emails:
             print(f"{email[0]}@{email[1]}")
 
