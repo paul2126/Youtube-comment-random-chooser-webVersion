@@ -62,10 +62,10 @@ class CommentAnalyzer:
         :return: comments[time, comment, email type]
         """
         try:
-            with open(self.html_name, "r", encoding="utf-8") as file:
+            with open(f"uploads/{self.html_name}", "r", encoding="utf-8") as file:
                 html_content = file.read()
         except UnicodeDecodeError:
-            with open(self.html_name, "r", encoding="cp949") as file:
+            with open(f"uploads/{self.html_name}", "r", encoding="cp949") as file:
                 html_content = file.read()
         except FileNotFoundError:
             raise FileNotFoundError(f"{self.html_name}을 찾을 수 없습니다.\n실행파일과 같은 폴더에 저장했는지 확인 부탁드립니다.")
@@ -110,14 +110,9 @@ class CommentAnalyzer:
             ) as file:
                 for data in datas:
                     file.write(", ".join(data) + "\n")
-                messagebox.showinfo(
-                    "저장 성공",
-                    f"{directory}에 {current_date}_{filename}.txt를 성공적으로 저장했습니다.",
-                )
+                raise SuccessException(f"{directory}에 {current_date}_{filename}.txt를 성공적으로 저장했습니다.")
         except Exception as e:
-            messagebox.showerror(
-                "저장 실패", f"파일 저장 중 오류가 발생했습니다: {str(e)}"
-            )
+            raise Exception(f"파일 저장 중 오류가 발생했습니다: {str(e)}")
 
     def overdue_comments(self, comments, end_date):
         """
@@ -125,30 +120,34 @@ class CommentAnalyzer:
         :param comments: comments[time, comment, email type], end_date
         :return: comments[time, comment, email type] that are posted before the end date, comments[time, comment, email type] that are posted after the end date, number of overdue comments, number of not overdue comments
         """
-        threshold = self.__time_conversion(end_date)
-        cnt_overdue = 0
-        cnt_not_overdue = 0
-        result = []
-        overdue_comments = []
-        for comment in comments:
-            if (
-                int(re.match(r"\d+", comment[0]).group())
-                >= threshold - self.grace_period
-            ):
-                if self.show_process:
-                    print(f"종료일자 이전 댓글: {comment[0]}, {comment[1]}")
-                result.append(comment)
-                cnt_not_overdue += 1
-            else:
-                print(f"종료일자 이후 댓글: {comment[0]}, {comment[1]}")
-                overdue_comments.append(comment)
-                cnt_overdue += 1
-        print(f"종료일자 이후 댓글: {cnt_overdue}개")
-        print(f"종료일자 이전 댓글: {cnt_not_overdue}개")
-        print()
+        try:
+            threshold = self.__time_conversion(end_date)
+            cnt_overdue = 0
+            cnt_not_overdue = 0
+            result = []
+            overdue_comments = []
+            for comment in comments:
+                if (
+                    int(re.match(r"\d+", comment[0]).group())
+                    >= threshold - self.grace_period
+                ):
+                    if self.show_process:
+                        print(f"종료일자 이전 댓글: {comment[0]}, {comment[1]}")
+                    result.append(comment)
+                    cnt_not_overdue += 1
+                else:
+                    print(f"종료일자 이후 댓글: {comment[0]}, {comment[1]}")
+                    overdue_comments.append(comment)
+                    cnt_overdue += 1
+            print(f"종료일자 이후 댓글: {cnt_overdue}개")
+            print(f"종료일자 이전 댓글: {cnt_not_overdue}개")
+            print()
 
-        return result, overdue_comments, cnt_overdue, cnt_not_overdue
-
+            return result, overdue_comments, cnt_overdue, cnt_not_overdue
+        except ValueError as e:
+            print("overdue_comments called")
+            raise ValueError(str(e))
+        
     def find_email(self, comments):
         """
         Find emails from comments
@@ -231,10 +230,7 @@ class CommentAnalyzer:
                 comments_remove_duplicate, self.pick_number
             )
         except Exception:  # Catch all exceptions
-            messagebox.showerror(
-                "에러", "모든 과정을 실행하는 도중 오류가 발생했습니다."
-            )
-            return
+            raise Exception("모든 과정을 실행하는 도중 오류가 발생했습니다.")
         return random_emails
 
     def __time_conversion(self, end_date):
@@ -243,13 +239,15 @@ class CommentAnalyzer:
         :param end_date: end date
         :return: the number of days from the current date
         """
-        current_year = datetime.now().year
-        end_date_with_year = f"{current_year}/{end_date}"
-        date_diff = datetime.now() - datetime.strptime(end_date_with_year, "%Y/%m/%d")
-        print(f"종료일({end_date})으로부터 {date_diff.days}일 지났습니다.")
-        print()
-        return date_diff.days
-
+        try:
+            current_year = datetime.now().year
+            end_date_with_year = f"{current_year}/{end_date}"
+            date_diff = datetime.now() - datetime.strptime(end_date_with_year, "%Y/%m/%d")
+            print(f"종료일({end_date})으로부터 {date_diff.days}일 지났습니다.")
+            print()
+            return date_diff.days
+        except ValueError:
+            raise ValueError("날짜 형식이 잘못되었습니다. 날짜를 다시 입력해주세요.")
     def save_settings(self, html_name, email_types, pick_number, grace_period):
         """
         Save settings to settings.json file
@@ -265,13 +263,18 @@ class CommentAnalyzer:
             if self.settings["pick_number"] <= 0 or self.settings["grace_period"] <= 0:
                 raise ValueError
         except ValueError:
-            messagebox.showerror(
-                "설정", "뽑기 수와 grace period는 양수로 입력해주세요."
-            )
-            return
+            raise ValueError("뽑기 수와 grace period는 양수로 입력해주세요.")
         with open("settings.json", "w", encoding="utf-8") as file:
             json.dump(self.settings, file, indent=4)
         self._get_settings()  # Update settings
-        messagebox.showinfo("설정", "정상적으로 저장되었습니다.")
+        raise SuccessException("정상적으로 저장되었습니다.")
 
+
+class SuccessException(Exception):
+    """
+    Custion exception to indicate success
+    """
+    def __init__(self, message="성공"):
+        self.message = message
+        super().__init__(self.message)
 

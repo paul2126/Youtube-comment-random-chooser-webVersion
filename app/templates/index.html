@@ -28,6 +28,23 @@
             <button id="save-settings">설정 저장</button>
         </div>
 
+        <div class="actions">
+            <button id="save-comments">현재 단계 저장</button>
+            <button id="run-all-in-one">자동 실행</button>
+            <button id="get-comments">1. 댓글 가져오기</button>
+            <button id="overdue-comments">2. 기간 초과 제거</button>
+            <button id="find-email">3. 이메일 추출</button>
+            <button id="find-duplicate-comments">4. 중복 응답 제거</button>
+            <button id="random-picker">5. 추천</button>
+            <input type="file" id="upload-file" accept=".html">
+            <button id="upload-button">파일 업로드</button>
+        </div>
+
+        <div class="result">
+            <label for="result">결과:</label>
+            <div id="result"></div>
+        </div>
+        
         <table class="data-table">
             <thead>
                 <tr>
@@ -41,20 +58,9 @@
             </tbody>
         </table>
 
-        <div class="result">
-            <label for="result">결과:</label>
-            <div id="result"></div>
-        </div>
 
-        <div class="actions">
-            <button id="save-comments">현재 단계 저장</button>
-            <button id="run-all-in-one">자동 실행</button>
-            <button id="get-comments">1. 댓글 가져오기</button>
-            <button id="overdue-comments">2. 기간 초과 제거</button>
-            <button id="find-email">3. 이메일 추출</button>
-            <button id="find-duplicate-comments">4. 중복 응답 제거</button>
-            <button id="random-picker">5. 추천</button>
-        </div>
+
+        
     </div>
 
     <script>
@@ -104,7 +110,15 @@
                     success: function(response) {
                         displayTable(response.comments_remove_overdue);
                         $('#result').text(`종료일자 이전 댓글: ${response.cnt_not_overdue}개, 종료일자 이후 댓글: ${response.cnt_overdue}개`);
+                    },
+                    error: function(xhr) {
+                    if (xhr.status === 404) {
+                        alert(xhr.responseJSON.error);
                     }
+                    if (xhr.status === 400) {
+                        alert(xhr.responseJSON.error);
+                    }
+                }
                 });
             });
 
@@ -152,6 +166,30 @@
                     data: JSON.stringify(data),
                     success: function(random_emails) {
                         displayTable(random_emails);
+                    }
+                });
+            });
+
+            $('#upload-button').click(function() {
+                const fileInput = $('#upload-file')[0];
+                if (fileInput.files.length === 0) {
+                    alert('파일을 선택해주세요.');
+                    return;
+                }
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+
+                $.ajax({
+                    url: '/upload_file',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        alert(response.message);
+                    },
+                    error: function(xhr) {
+                        alert(xhr.responseJSON.error);
                     }
                 });
             });
