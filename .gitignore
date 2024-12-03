@@ -10,3 +10,6 @@ htmlcov/
 docs/_build/
 .uploads/*.html
 settings.json
+networkconfig.ini
+data/*
+uploads/*
