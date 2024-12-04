@@ -248,7 +248,11 @@
                     data: JSON.stringify(data),
                     success: function(response) {
                         displayTable(response.comments_remove_duplicate);
-                        $('#result').text(`중복된 이메일: ${response.cnt_duplicate}개, 중복되지 않은 이메일: ${response.cnt_not_duplicate}개`);
+                        if (response.duplicate_emails.length > 0) {
+                            $('#result').text(`중복된 이메일: ${response.duplicate_emails.join(', ')}, 중복되지 않은 이메일: ${response.cnt_not_duplicate}개`);
+                        } else {
+                            $('#result').text(`중복된 이메일: ${response.cnt_duplicate}개, 중복되지 않은 이메일: ${response.cnt_not_duplicate}개`);
+                        }
                     }
                 });
             });
