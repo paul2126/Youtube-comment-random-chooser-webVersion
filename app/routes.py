@@ -173,7 +173,7 @@ def upload_file():
         filename = "comments.html" # change filename to comments.html
         file.save(os.path.join('uploads', filename))
         analyzer.html_name = filename
-        return jsonify({"message": "File uploaded successfully"})
+        return jsonify({"message": "성공적으로 파일을 업로드했습니다."})
     else:
         return jsonify({"error": "Invalid file type"}), 400
 
