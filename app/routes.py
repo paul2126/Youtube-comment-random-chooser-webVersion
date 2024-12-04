@@ -1,19 +1,73 @@
 from datetime import datetime
 import json
-from flask import Blueprint, render_template, request, jsonify, send_from_directory
+from urllib.parse import urlencode
+from flask import Blueprint, flash, render_template, request, jsonify, send_from_directory, url_for
+from flask_login import current_user, login_required, login_manager, login_user, logout_user
 from werkzeug.utils import secure_filename
 import os
 from .logic import CommentAnalyzer
 from .exception import SuccessException
+
+from flask import request #회원정보 제출했을때 받아오기 위한 request, post요청을 활성화시키기 위함
+from flask import redirect   #페이지 이동시키는 함수
+from app.forms import RegisterForm
+from app.forms import LoginForm
+from app.models import Fcuser #모델의 클래스 가져오기.
+from app.models import db
+from flask import session 
 
 main = Blueprint('main', __name__)
 analyzer = CommentAnalyzer()
 
 @main.route('/')
 def index():
-    return render_template('index.html')
+    if current_user.is_authenticated:
+        return render_template('index.html', username=current_user.username)
+    else:
+        form = LoginForm()
+        return render_template('login.html', form=form)
+
+@main.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()  # 로그인 폼 생성
+    if form.validate_on_submit():  # 유효성 검사
+        userid = form.data.get('userid')
+        fcuser = Fcuser.query.filter_by(userid=userid).first()
+        if fcuser and fcuser.password == form.data.get('password'):
+            login_user(fcuser)
+            return redirect(url_for('main.index'))
+        else:
+            return render_template('login.html', form=form, error='Invalid credentials')
+    return render_template('login.html', form=form)
+    
+@main.route('/logout',methods=['GET'])
+def logout():
+    logout_user()
+    return redirect('/')
+
+@main.route('/register', methods=['GET','POST'])  #겟, 포스트 메소드 둘다 사용
+# @login_required
+def register():   #get 요청 단순히 페이지 표시 post요청 회원가입-등록을 눌렀을때 정보 가져오는것
+    form = RegisterForm()
+    if form.validate_on_submit(): # POST검사의 유효성검사가 정상적으로 되었는지 확인할 수 있다. 입력 안한것들이 있는지 확인됨.
+        #비밀번호 = 비밀번호 확인 -> EqulaTo
+    
+        fcuser = Fcuser()  #models.py에 있는 Fcuser 
+        fcuser.userid = form.data.get('userid')
+        fcuser.username = form.data.get('username')
+        fcuser.password = form.data.get('password')
+            
+        print(fcuser.userid,fcuser.password)  #회원가입 요청시 콘솔창에 ID만 출력 (확인용, 딱히 필요없음)
+        db.session.add(fcuser)  # id, name 변수에 넣은 회원정보 DB에 저장
+        db.session.commit()  #커밋
+        
+        flash("가입완료! 로그인해주세요","success")  #플래시 메시지
+        return redirect(url_for('main.login'))  # Redirect to the login page after successful signup
+        # return "가입완료"
+    return render_template('register.html', form=form)
 
 @main.route('/get_settings', methods=['GET'])
+@login_required
 def get_settings():
     try:
         with open('settings.json', 'r', encoding='utf-8') as file:
@@ -25,6 +79,7 @@ def get_settings():
         return jsonify({"error": str(e)}), 500
     
 @main.route('/save_settings', methods=['POST'])
+@login_required
 def save_settings():
     try:
         data = request.json
@@ -41,6 +96,7 @@ def save_settings():
         return jsonify({"message": str(e)}), 200
 
 @main.route('/get_comments', methods=['GET'])
+@login_required
 def get_comments():
     try:
         comments, cnt = analyzer.get_comments()
@@ -49,6 +105,7 @@ def get_comments():
         return jsonify({"error": str(e)}), 404
 
 @main.route('/overdue_comments', methods=['POST'])
+# @login_required
 def overdue_comments():
     try:
         data = request.json
@@ -66,8 +123,11 @@ def overdue_comments():
     except ValueError as e:
         print("route overdue comment called")
         return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @main.route('/find_email', methods=['POST'])
+@login_required
 def find_email():
     data = request.json
     comments_remove_overdue = data['comments_remove_overdue']
@@ -78,6 +138,7 @@ def find_email():
     })
 
 @main.route('/find_duplicate_comments', methods=['POST'])
+@login_required
 def find_duplicate_comments():
     data = request.json
     comments_emails = data['comments_emails']
@@ -90,6 +151,7 @@ def find_duplicate_comments():
     })
 
 @main.route('/random_picker', methods=['POST'])
+@login_required
 def random_picker():
     try:
         data = request.json
@@ -101,6 +163,7 @@ def random_picker():
         return jsonify({"error": str(e)}), 400
     
 @main.route('/upload_file', methods=['POST'])
+@login_required
 def upload_file():
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
@@ -116,6 +179,7 @@ def upload_file():
         return jsonify({"error": "Invalid file type"}), 400
 
 @main.route('/save_comments', methods=['POST'])
+@login_required
 def save_comments():
     try:
         data = request.json
@@ -127,6 +191,7 @@ def save_comments():
         return jsonify({"error": str(e)}), 500
     
 @main.route('/download_file/<path:filename>', methods=['GET'])
+@login_required
 def download_file(filename):
     try:
         return send_from_directory('data', filename, as_attachment=True)
