@@ -153,7 +153,7 @@ class CommentAnalyzer:
             for comment in comments:
                 if (
                     int(re.match(r"\d+", comment[0]).group())
-                    >= threshold - self.grace_period
+                    >= threshold - self.grace_period and not ("시간" in comment[0])
                 ):
                     if self.show_process:
                         print(f"종료일자 이전 댓글: {comment[0]}, {comment[1]}")
