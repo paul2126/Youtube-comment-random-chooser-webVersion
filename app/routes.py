@@ -46,7 +46,7 @@ def logout():
     return redirect('/')
 
 @main.route('/register', methods=['GET','POST'])  #겟, 포스트 메소드 둘다 사용
-# @login_required
+@login_required
 def register():   #get 요청 단순히 페이지 표시 post요청 회원가입-등록을 눌렀을때 정보 가져오는것
     form = RegisterForm()
     if form.validate_on_submit(): # POST검사의 유효성검사가 정상적으로 되었는지 확인할 수 있다. 입력 안한것들이 있는지 확인됨.
