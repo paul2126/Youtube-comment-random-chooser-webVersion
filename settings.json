@@ -9,5 +9,5 @@
     ],
     "pick_number": 3,
     "show_process": true,
-    "grace_period": 2
+    "grace_period": 1
 }
