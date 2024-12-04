@@ -10,6 +10,7 @@ htmlcov/
 docs/_build/
 .uploads/*.html
 settings.json
-networkconfig.ini
-data/*
+config.ini
+app/static/data/*
 uploads/*
+*.sqlite
