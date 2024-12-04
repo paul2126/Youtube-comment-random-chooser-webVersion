@@ -266,8 +266,8 @@
                         'X-CSRFToken': csrfToken
                     },
                     data: JSON.stringify(data),
-                    success: function(random_emails) {
-                        displayTable(random_emails);
+                    success: function(response) {
+                        displayTable(response.random_emails);
                     },
                     error: function(xhr) {
                         if (xhr.status === 400) {
