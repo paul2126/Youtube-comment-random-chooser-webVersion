@@ -314,6 +314,9 @@
                 $.ajax({
                     url: '/upload_file',
                     type: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
                     data: formData,
                     processData: false,
                     contentType: false,
