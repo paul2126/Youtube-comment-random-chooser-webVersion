@@ -121,7 +121,6 @@ def overdue_comments():
     except FileNotFoundError as e:
         return jsonify({"error": str(e)}), 404
     except ValueError as e:
-        print("route overdue comment called")
         return jsonify({"error": str(e)}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -158,7 +157,7 @@ def random_picker():
         comments_remove_duplicate = data['comments_remove_duplicate']
         pick_number = data['pick_number']
         random_emails = analyzer.random_picker(comments_remove_duplicate, pick_number)
-        return jsonify(random_emails)
+        return jsonify({random_emails})
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     
@@ -186,7 +185,18 @@ def save_comments():
         comments = data['comments']
         filename = "comments"
         filepath = analyzer.save_data(comments, filename)
-        return jsonify({"message": "Comments saved successfully", "filepath": filepath})
+        return jsonify({"message": "Comments saved successfully", "filepath": url_for('static', filename=filepath, _external=True)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@main.route('/all_in_one', methods=['POST'])
+@login_required
+def all_in_one():
+    try:
+        data = request.json
+        end_date = data['end_date']
+        random_emails = analyzer.all_in_one(end_date)
+        return jsonify({"random_emails": random_emails})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     

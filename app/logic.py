@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 # import tkinter as tk
 # from tkinter import ttk, scrolledtext, messagebox
 import random
+
+from flask import current_app
 from .exception import SuccessException
 
 
@@ -99,27 +101,43 @@ class CommentAnalyzer:
 
     # 웹에서는 사용하지 않음
     # 자바스크립트로 처리
+    # def save_data(self, datas, filename):
+    #     """
+    #     Save data to a text file
+    #     :param comments: 데이터 리스트, 파일이름
+    #     """
+    #     current_date = datetime.now().strftime("%Y-%m-%d")
+    #     directory = "data"
+    #     os.makedirs(directory, exist_ok=True)
+    #     try:
+    #         with open(
+    #             f"./{directory}/{current_date}_{filename}.txt", "w", encoding="utf-8"
+    #         ) as file:
+    #             for data in datas:
+    #                 file.write(", ".join(data) + "\n")
+    #             # raise SuccessException(f"{directory}에 {current_date}_{filename}.txt를 성공적으로 저장했습니다.")
+    #             return f"./{directory}/{current_date}_{filename}.txt" # 파일 경로 반환
+    #     except SuccessException as e:
+    #         raise e
+    #     except Exception as e:
+    #         raise Exception(f"파일 저장 중 오류가 발생했습니다: {str(e)}")
     def save_data(self, datas, filename):
         """
         Save data to a text file
         :param comments: 데이터 리스트, 파일이름
         """
         current_date = datetime.now().strftime("%Y-%m-%d")
-        directory = "data"
+        directory = os.path.join(current_app.static_folder, 'data')
         os.makedirs(directory, exist_ok=True)
+        filepath = os.path.join(directory, f"{current_date}_{filename}.txt")
         try:
-            with open(
-                f"./{directory}/{current_date}_{filename}.txt", "w", encoding="utf-8"
-            ) as file:
+            with open(filepath, "w", encoding="utf-8") as file:
                 for data in datas:
                     file.write(", ".join(data) + "\n")
-                # raise SuccessException(f"{directory}에 {current_date}_{filename}.txt를 성공적으로 저장했습니다.")
-                return f"./{directory}/{current_date}_{filename}.txt" # 파일 경로 반환
-        except SuccessException as e:
-            raise e
+            return os.path.relpath(filepath, current_app.static_folder)
         except Exception as e:
             raise Exception(f"파일 저장 중 오류가 발생했습니다: {str(e)}")
-
+        
     def overdue_comments(self, comments, end_date):
         """
         Remove comments that are posted after the end date
@@ -151,7 +169,6 @@ class CommentAnalyzer:
 
             return result, overdue_comments, cnt_overdue, cnt_not_overdue
         except ValueError as e:
-            print("overdue_comments called")
             raise ValueError(str(e))
         
     def find_email(self, comments):
@@ -237,8 +254,8 @@ class CommentAnalyzer:
             random_emails = self.random_picker(
                 comments_remove_duplicate, self.pick_number
             )
-        except Exception:  # Catch all exceptions
-            raise Exception("모든 과정을 실행하는 도중 오류가 발생했습니다.")
+        except Exception as e:  # Catch all exceptions
+            raise Exception(e)
         return random_emails
 
     def __time_conversion(self, end_date):

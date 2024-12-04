@@ -276,6 +276,31 @@
                     }
                 });
             });
+            $('#run-all-in-one').click(function() {
+                const data = {
+                    end_date: $('#end-date').val()
+                };
+                $.ajax({
+                    url: '/all_in_one',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        displayTable(response.random_emails);
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 400) {
+                            alert(xhr.responseJSON.error);
+                        }
+                        if (xhr.status === 500) {
+                            alert(xhr.responseJSON.error);
+                        }
+                    }
+                });
+            });
 
             $('#upload-button').click(function() {
                 const fileInput = $('#upload-file')[0];
