@@ -57,11 +57,11 @@
     }
 
     .data-table th:nth-child(2) {
-        width: 10%; /* Set the width of the second column */
+        width: 15%; /* Set the width of the second column */
     }
 
     .data-table th:nth-child(3) {
-        width: 75%; /* Set the width of the third column */
+        width: 70%; /* Set the width of the third column */
     }
 
     .data-table th:nth-child(4) {
@@ -232,6 +232,9 @@
                     if (xhr.status === 400) {
                         alert(xhr.responseJSON.error);
                     }
+                    if (xhr.status === 500) {
+                        alert(xhr.responseJSON.error);
+                    }
                 }
                 });
             });
@@ -330,7 +333,7 @@
             $('#upload-button').click(function() {
                 const fileInput = $('#upload-file')[0];
                 if (fileInput.files.length === 0) {
-                    alert('파일을 선택해주세요.');
+                    alert('��일을 선택해주세요.');
                     return;
                 }
                 const formData = new FormData();
@@ -392,7 +395,7 @@
                     data: JSON.stringify({ comments: selectedComments }),
                     success: function(response) {
                         alert(response.message);
-                        // Refresh the table or handle the response as needed
+                        displayTable(response.updated_comments); // Refresh the table with updated comments
                     },
                     error: function(xhr) {
                         alert(xhr.responseJSON.error);

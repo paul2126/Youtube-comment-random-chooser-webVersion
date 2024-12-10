@@ -109,9 +109,9 @@ def get_comments():
 def overdue_comments():
     try:
         data = request.json
-        comments, _ = analyzer.get_comments()
+        # comments, _ = analyzer.get_comments()
         end_date = data['end_date']
-        comments_remove_overdue, comments_overdue, cnt_overdue, cnt_not_overdue = analyzer.overdue_comments(comments, end_date)
+        comments_remove_overdue, comments_overdue, cnt_overdue, cnt_not_overdue = analyzer.overdue_comments(end_date)
         return jsonify({
             "comments_remove_overdue": comments_remove_overdue,
             "comments_overdue": comments_overdue,
@@ -130,7 +130,7 @@ def overdue_comments():
 def find_email():
     data = request.json
     comments_remove_overdue = data['comments_remove_overdue']
-    comments_emails, cnt_email = analyzer.find_email(comments_remove_overdue)
+    comments_emails, cnt_email = analyzer.find_email()
     return jsonify({
         "comments_emails": comments_emails,
         "cnt_email": cnt_email
@@ -141,7 +141,7 @@ def find_email():
 def find_duplicate_comments():
     data = request.json
     comments_emails = data['comments_emails']
-    comments_remove_duplicate, duplicate_emails, cnt_duplicate, cnt_not_duplicate = analyzer.find_duplicate_comments(comments_emails)
+    comments_remove_duplicate, duplicate_emails, cnt_duplicate, cnt_not_duplicate = analyzer.find_duplicate_comments()
     return jsonify({
         "comments_remove_duplicate": comments_remove_duplicate,
         "duplicate_emails": duplicate_emails,
@@ -156,7 +156,7 @@ def random_picker():
         data = request.json
         comments_remove_duplicate = data['comments_remove_duplicate']
         pick_number = data['pick_number']
-        random_emails = analyzer.random_picker(comments_remove_duplicate, pick_number)
+        random_emails = analyzer.random_picker( pick_number)
         return jsonify({"random_emails": random_emails})
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
@@ -214,8 +214,8 @@ def exclude_comments():
     try:
         data = request.json
         comments_to_exclude = data['comments']
-        # analyzer.exclude_comments(comments_to_exclude)
-        return jsonify({"message": "선택된 댓글이 성공적으로 제외되었습니다."})
+        analyzer.exclude_comments(comments_to_exclude)
+        return jsonify({"message": "선택된 댓글이 성공적으로 제외되었습니다.", "updated_comments": analyzer.comments})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
