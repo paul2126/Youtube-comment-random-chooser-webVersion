@@ -105,7 +105,7 @@ def get_comments():
         return jsonify({"error": str(e)}), 404
 
 @main.route('/overdue_comments', methods=['POST'])
-# @login_required
+@login_required
 def overdue_comments():
     try:
         data = request.json
@@ -207,6 +207,17 @@ def download_file(filename):
         return send_from_directory('data', filename, as_attachment=True)
     except FileNotFoundError:
         return jsonify({"error": "File not found"}), 404
+
+@main.route('/exclude_comments', methods=['POST'])
+@login_required
+def exclude_comments():
+    try:
+        data = request.json
+        comments_to_exclude = data['comments']
+        # analyzer.exclude_comments(comments_to_exclude)
+        return jsonify({"message": "선택된 댓글이 성공적으로 제외되었습니다."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
 if __name__ == '__main__':
     main.run(debug=True)

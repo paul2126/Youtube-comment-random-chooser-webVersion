@@ -12,6 +12,7 @@ from .exception import SuccessException
 
 
 class CommentAnalyzer:
+    
     def __init__(self, settings_file="settings.json"):
         if not os.path.exists("settings.json"):
             self._create_settings()
@@ -100,7 +101,7 @@ class CommentAnalyzer:
         return result, len(comments)
 
     # 웹에서는 사용하지 않음
-    # 자바스크립트로 처리
+    # 자바��크립트로 처리
     # def save_data(self, datas, filename):
     #     """
     #     Save data to a text file
@@ -285,7 +286,7 @@ class CommentAnalyzer:
         try:
             self.settings["pick_number"] = int(pick_number)
             self.settings["grace_period"] = int(grace_period)
-            if self.settings["pick_number"] <= 0 or self.settings["grace_period"] <= 0:
+            if self.settings["pick_number"] <= 0 or self.settings["grace_period"] < 0:
                 raise ValueError
         except ValueError:
             raise ValueError("뽑기 수와 grace period는 양수로 입력해주세요.")
@@ -293,5 +294,42 @@ class CommentAnalyzer:
             json.dump(self.settings, file, indent=4)
         self._get_settings()  # Update settings
         raise SuccessException("정상적으로 저장되었습니다.")
+    def exclude_comments(self, comments_to_exclude):
+        """
+        Exclude specified comments from further processing
+        :param comments_to_exclude: List of comments to exclude
+        """
+        try:
+            with open(f"./uploads/{self.html_name}", "r", encoding="utf-8") as file:
+                html_content = file.read()
+        except UnicodeDecodeError:
+            with open(f"./uploads/{self.html_name}", "r", encoding="cp949") as file:
+                html_content = file.read()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"{self.html_name}을 찾을 수 없습니다.\n실행파일과 같은 폴더에 저장했는지 확인 부탁드립니다.")
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        comment_elements = soup.find_all("yt-attributed-string", id="content-text")
+        time_elements = soup.find_all("span", id="published-time-text")
+
+        comments = [
+            re.sub(r"\s+", " ", comment.get_text(strip=True))
+            for comment in comment_elements
+        ]
+        times = [time.get_text(strip=True) for time in time_elements]
+
+        # Filter out the comments to exclude
+        filtered_comments = []
+        for i in range(len(comments)):
+            comment_data = [times[i], comments[i]]
+            if comment_data not in comments_to_exclude:
+                filtered_comments.append(comment_data)
+
+        # Save the filtered comments back to the HTML file
+        with open(f"./uploads/{self.html_name}", "w", encoding="utf-8") as file:
+            for comment in filtered_comments:
+                file.write(f"{comment[0]}: {comment[1]}\n")
+
+        self._get_settings()  # Update settings
 
 

@@ -30,13 +30,14 @@
     .data-table {
         width: 100%;
         border-collapse: collapse;
-        table-layout: auto; /* Allow table to resize */
+        table-layout: fixed; /* Ensure table fits within the container */
     }
 
     .data-table th, .data-table td {
         border: 1px solid #ddd;
         padding: 8px;
-        white-space: nowrap; /* Prevent text wrapping */
+        white-space: normal; /* Allow text wrapping */
+        word-wrap: break-word; /* Break long words */
     }
 
     .data-table th {
@@ -47,6 +48,24 @@
 
     .data-table td:nth-child(2) { /* Set the width of the second column */
         white-space: normal; /* Allow text wrapping */
+    }
+    .exclude-button {
+        margin-top: 10px;
+    }
+    .data-table th:nth-child(1) {
+        width: 5%; /* Set the width of the first column */
+    }
+
+    .data-table th:nth-child(2) {
+        width: 10%; /* Set the width of the second column */
+    }
+
+    .data-table th:nth-child(3) {
+        width: 75%; /* Set the width of the third column */
+    }
+
+    .data-table th:nth-child(4) {
+        width: 10%; /* Set the width of the fourth column */
     }
 </style>
 <head>
@@ -110,6 +129,7 @@
             <table class="data-table">
                 <thead>
                     <tr>
+                        <th>선택</th>
                         <th>시간</th>
                         <th>댓글</th>
                         <th>이메일 종류</th>
@@ -120,6 +140,7 @@
                 </tbody>
             </table>
         </div>
+        <button id="exclude-comments" class="exclude-button">선택된 댓글 제외</button>
         <button id="logout" style="float: right; margin-right: 10px;">로그아웃</button>
 
 
@@ -338,12 +359,46 @@
                 tbody.empty();
                 data.forEach(row => {
                     const tr = $('<tr>');
+                    tr.append($('<td>').html('<input type="checkbox" class="comment-checkbox">'));
                     row.forEach(cell => {
                         tr.append($('<td>').text(cell));
                     });
                     tbody.append(tr);
                 });
             }
+
+            $('#exclude-comments').click(function() {
+                const selectedComments = [];
+                $('#data-table-body tr').each(function() {
+                    const checkbox = $(this).find('.comment-checkbox');
+                    if (checkbox.is(':checked')) {
+                        const row = [];
+                        $(this).find('td').each(function(index) {
+                            if (index > 0) { // Skip the checkbox column
+                                row.push($(this).text());
+                            }
+                        });
+                        selectedComments.push(row);
+                    }
+                });
+                // Send the selected comments to the server to exclude them
+                $.ajax({
+                    url: '/exclude_comments',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    data: JSON.stringify({ comments: selectedComments }),
+                    success: function(response) {
+                        alert(response.message);
+                        // Refresh the table or handle the response as needed
+                    },
+                    error: function(xhr) {
+                        alert(xhr.responseJSON.error);
+                    }
+                });
+            });
 
             $('#save-comments').click(function() {
                 const tableData = getTableData();
